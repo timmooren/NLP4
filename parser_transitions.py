@@ -108,7 +108,6 @@ def minibatch_parse(sentences: list, model, batch_size):
                 unfinished_parses.remove(parse)
 
 
-
     return dependencies
 
 
