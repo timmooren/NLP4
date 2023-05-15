@@ -51,6 +51,7 @@ class PartialParse(object):
                                                         parsing the sentence. Represented as a list of
                                                         tuples where each tuple is of the form (head, dependent).
         """
+        # print(f'parse item: {self}')
         for transition in transitions:
             self.parse_step(transition)
         return self.dependencies
@@ -100,14 +101,29 @@ def minibatch_parse(sentences: list, model, batch_size):
         minibatch = unfinished_parses[:batch_size]
         # Use the model to predict the next transition for each partial parse in the minibatch
         transitions = model.predict(minibatch)
+        print(f'transitions: {transitions}')
+        print()
         # Perform a parse step on each partial parse in the minibatch with its predicted transition
-        parsed = [partial_parses[i].parse_step(transitions[i]) for i in range(len(minibatch))]
-        # Remove the completed (empty buffer and stack of size 1) parses from unfinished parses
-        for parse in parsed:
+        # parsed = [partial_parses[i].parse_step(transitions[i]) for i in range(len(minibatch))]
+        # # Remove the completed (empty buffer and stack of size 1) parses from unfinished parses
+        # for parse in parsed:
+        #     if not parse.buffer and len(parse.stack) == 1:
+        #         unfinished_parses.remove(parse)
+
+        # my fix
+        dependencies = [minibatch[i].parse([transitions[i]]) for i in range(len(minibatch))]
+        print('after parse step')
+        print(f'first stack: {minibatch[0].stack} and buffer: {minibatch[0].buffer}')
+        print(f'second stack: {partial_parses[1].stack} and buffer: {partial_parses[1].buffer}')
+        print()
+        for parse in minibatch:
+            #print(f'parse: {parse.stack} and {parse.buffer}')
             if not parse.buffer and len(parse.stack) == 1:
+                # print(f'to be removed: {parse}')
                 unfinished_parses.remove(parse)
-
-
+        # t+=1
+        # if t==10:
+        #     break
     return dependencies
 
 
@@ -226,7 +242,12 @@ def test_minibatch_parse():
 if __name__ == '__main__':
     args = sys.argv
     if len(args) != 2:
-        raise Exception("You did not provide a valid keyword. Either provide 'part_c' or 'part_d', when executing this script")
+        sentences = [["right", "arcs", "only"],
+                ["right", "arcs", "only", "again"],
+                ["left", "arcs", "only"],
+                ["left", "arcs", "only", "again"]]
+        minibatch_parse(sentences, DummyModel(), 2)
+        #raise Exception("You did not provide a valid keyword. Either provide 'part_c' or 'part_d', when executing this script")
     elif args[1] == "part_c":
         test_parse_step()
         test_parse()
@@ -234,3 +255,5 @@ if __name__ == '__main__':
         test_minibatch_parse()
     else:
         raise Exception("You did not provide a valid keyword. Either provide 'part_c' or 'part_d', when executing this script")
+
+       
