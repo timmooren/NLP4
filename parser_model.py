@@ -52,6 +52,8 @@ class ParserModel(nn.Module):
 
         # 1 EMBEDDING LAYER
         # Declare `self.embed_to_hidden_weight` and `self.embed_to_hidden_bias` as `nn.Parameter`
+        # input vector X is list of E's (MxD) flattend 
+        # number of rows is n_features * embed_size because this is the size of input vector X
         self.embed_to_hidden_weight = nn.Parameter(
             torch.zeros((self.n_features * self.embed_size, self.hidden_size))
         )
@@ -69,9 +71,11 @@ class ParserModel(nn.Module):
         self.hidden_to_logits_weight = nn.Parameter(
             torch.zeros((self.hidden_size, self.n_classes))
         )
+        self.hidden_to_logits_bias = nn.Parameter(torch.zeros(self.n_classes))
         # Initialize weight with the `nn.init.xavier_uniform_` function and bias with `nn.init.uniform_`
         nn.init.xavier_uniform_(self.hidden_to_logits_weight)
-        self.hidden_to_logits_bias = nn.Parameter(torch.zeros(self.n_classes))
+        nn.init.uniform_(self.hidden_to_logits_bias)
+        
 
 
     def embedding_lookup(self, w):
@@ -88,9 +92,8 @@ class ParserModel(nn.Module):
         ###     2) Reshape the tensor using `view` function if necessary
         
         indices = w.flatten()
-        x = torch.index_select(self.embeddings, dim=0, index=indices).view(
-            w.shape[0], -1
-        )
+        # first dim is batch size
+        x = torch.index_select(self.embeddings, dim=0, index=indices) # .view(w.shape[0], -1)
 
         return x
 
